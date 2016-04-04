@@ -46,7 +46,7 @@ class ImputerProba():
         self.copy = copy
 
     def fit(self, X, y):
-        if self.verbose: print "Fit"
+        if self.verbose: print "Fit, lengh X: " + str(len(X))
         self.catEncoders = dict()
         self.catProbability = dict()
 
@@ -58,13 +58,13 @@ class ImputerProba():
             # Create dictionnary
             uniqueValues = X[col].unique()
             dictValues = dict()
-            dictValues = defaultdict(lambda: -1, dictValues)       
+            #dictValues = defaultdict(lambda: -1, dictValues)       
             for v in uniqueValues:
                 if v is np.nan:
                     continue
                 if not v in dictValues:
                     dictValues[v] = len(dictValues)
-            #dictValues[np.nan] = -1 # Leave NaN as NaN for the imputer mean
+            dictValues[np.nan] = -1 # Leave NaN as NaN for the imputer mean
         
             self.catEncoders[col] = dictValues
 
@@ -78,7 +78,7 @@ class ImputerProba():
             # Cat probability
             df = pd.pivot_table(_X, values='target', columns=[col], aggfunc=np.average, fill_value=-1) # index=['A', 'B']
             dictProba = df.to_dict()
-            dictProba = defaultdict(lambda: -1, dictProba)
+            #dictProba = defaultdict(lambda: -1, dictProba)
             #print dictProba
         
             self.catProbability[col] = dictProba
@@ -110,8 +110,10 @@ class ImputerProba():
             for v in set(uniqueValues) - set(uniqueValuesTraining):
                 self.catProbability[col][v] = -2
         
-        X = X.replace(self.catEncoders)
-        X = X.replace(self.catProbability)
+        if len(self.catEncoders):
+            X = X.replace(self.catEncoders)
+        if len(self.catProbability):
+            X = X.replace(self.catProbability)
 
         return X
 
